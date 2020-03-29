@@ -99,7 +99,7 @@ class EstimationInfectedPeople():
         #'''  # Andrew add
         idx_confirmed_start = 0
         for idx, i_confirmed in enumerate(self.confirmed):
-            if(i_confirmed>=20):
+            if(i_confirmed>=1):
                 idx_confirmed_start = idx
                 break
 
@@ -237,6 +237,7 @@ class EstimationInfectedPeople():
         bounds = [(0, None)]
         initParams = [0.001]
         step = int(self.confirmed[len(self.confirmed) - 1] / 10)
+        #step = 100
         self.bestEstimatedParams = None  # Andrew add
         for susceptible in range(int(self.confirmed[len(self.confirmed) - 1]), int(self.population*0.5), step):  # support max N self.population*0.5)
             self.initParams = [susceptible, 0, np.min(self.confirmed), 0, 0]
@@ -354,7 +355,7 @@ class EstimationInfectedPeople():
 
 
     def save_plot(self, title='', result_path=None):
-        output = 'new_coronavirus_' + self.name  + '_' + title + '.png'
+        output = self.name  + '_' + title + '.png'
         if result_path is None:
             plt.savefig(output)
         else:

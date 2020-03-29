@@ -11,12 +11,13 @@ from EstimationInfectedPeople import EstimationInfectedPeople
 
 http_link = r'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/'
 # ref: https://github.com/CSSEGISandData/COVID-19
-filename_confirmed = 'time_series_19-covid-Confirmed.csv'
-filename_deaths = 'time_series_19-covid-Deaths.csv'
-filename_recovered = 'time_series_19-covid-Recovered.csv'
-optim_days = 30   # None, 60, 30,
+filename_confirmed = 'time_series_covid19_confirmed_global.csv'
+filename_deaths = 'time_series_covid19_deaths_global.csv'
+filename_recovered = 'time_series_covid19_recovered_global.csv'
+optim_days = 45   # None, 60, 30,
 optim_weight_en = 0
 SEIR_en = 1
+show_day = 14
 
 # population:
 # https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)
@@ -25,55 +26,45 @@ SEIR_en = 1
 #check_Country =  ['Taiwan*', 'Singapore', 'Korea, South', 'China',     'China', 'Italy', 'US', 'US',         'US',       'US',         'US',             'France', 'Germany', 'Spain']
 #check_Province = [None ,     None ,       None ,          'Hong Kong', 'Hubei', None,    None, 'Washington', 'New York', 'California', 'Massachusetts',  None ,    None ,     None ,]
 
-'''
-check_Country    = ['Taiwan*', 'Korea, South', 'Singapore', 'China',    'Italy',]    #'US',       'US', ]
-check_Province   = [None ,     None ,          None,        'Hong Kong', None, ]     #'New York', None, ]
-check_population = [23600903,  52000000,       5757499,     7479971,     60627291,]  #19453561,   329064917]
-'''
+#'''
+check_Country    = ['Taiwan*', 'Korea, South', 'Singapore', 'China',    'Italy',   'US',     'Japan',    'Malaysia']
+check_Province   = [None ,     None ,          None,        'Hong Kong', None,     None,      None,      None, ]
+check_population = [23600903,  52000000,       5757499,     7479971,     60627291, 329064917, 126860301, 32365999,]
+#'''
 '''
 check_Country =  ['US',]
 check_Province = [None, ]
-population = [329064917,]
+check_population = [329064917,]
 '''
 '''
-check_Country =  ['US',]
-check_Province = [ 'New York',  ]
-population = [19453561,]
-'''
-'''
-check_Country =  ['US',]
-check_Province = [ 'Washington',  ]
-population = [7614893,]
-'''
-#'''
 check_Country =  ['Taiwan*',]
 check_Province = [ None,  ]
-population = [23600903,]
-#'''
+check_population = [23600903,]
+'''
 '''
 check_Country =  ['Korea, South']
 check_Province = [ None,  ]
-population = [52000000,]
+check_population = [52000000,]
 '''
 '''
 check_Country =  ['Singapore',]
 check_Province = [ None,  ]
-population = [5757499,]
+check_population = [5757499,]
 '''
 '''
 check_Country =  ['Italy',]
 check_Province = [ None,  ]
-population = [60627291,]
+check_population = [60627291,]
 '''
 '''
 check_Country =  ['Japan',]
 check_Province = [ None,  ]
-population = [126860301,]
+check_population = [126860301,]
 '''
 '''
 check_Country =  ['Malaysia',]
 check_Province = [ None,  ]
-population = [32365999,]
+check_population = [32365999,]
 '''
 
 data_path = os.path.join('.', '~data')
@@ -144,7 +135,7 @@ def main():
         axes2.plot(daily_timestamp_confirmed, daily_value_confirmed, color='r', label='confirmed')
         axes2.set_ylabel('confirmed cases')
 
-        axes2.xaxis.set_major_locator(MultipleLocator(7))
+        axes2.xaxis.set_major_locator(MultipleLocator(show_day))
         axes2.xaxis.set_minor_locator(MultipleLocator(1))
 
         plt.title(title)
