@@ -1,7 +1,7 @@
 # seir_model_for_covid-19
 
 ## 模型
-採用SEIR模型，參考 https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology，模型僅供研究，請理性討論。
+採用SEIR模型，參考 https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology  模型僅供研究，請理性討論。
 
 
 ## 資料
