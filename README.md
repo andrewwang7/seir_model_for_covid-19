@@ -7,7 +7,8 @@
 潛伏期設定為5.5, 依照台灣CDC的Q&A (https://www.cdc.gov.tw/Category/QAPage/B5ttQxRgFUZlRFPS1dRliw)  
 
 ## 資料
-確診人數資料來源: https://github.com/CSSEGISandData/COVID-19
+確診人數資料來源: https://github.com/CSSEGISandData/COVID-19  
+人數比記者會的資料落後1~2天
 
 ## 程式與概念 
 直接執行run_dl_analysis.py 即可  
