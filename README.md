@@ -1,3 +1,4 @@
+![Taiwan](https://user-images.githubusercontent.com/27774075/119217358-4d8cb200-bb0c-11eb-99dd-610da9bd83a4.png)
 # seir_model_for_covid-19
 
 ## 模型
@@ -21,4 +22,5 @@ SEIR模型主要是擬合已公布的感染人數 (=確診人數-死亡人數-�
 註解:
 去年此模型是高估, 預測結果僅供參考, 僅供研究, 疫情數據以台灣CDC公告為主
 
-
+<範例結果>
+![image](https://github.com/andrewwang7/seir_model_for_covid-19/blob/master/~result/Taiwan.png)
