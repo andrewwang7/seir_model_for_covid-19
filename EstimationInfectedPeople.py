@@ -1,6 +1,7 @@
 import sys
 import csv
 import numpy as np
+import pandas as pd
 from scipy.integrate import odeint
 from scipy.optimize import minimize
 from sklearn.metrics import mean_squared_log_error, mean_squared_error
@@ -15,69 +16,17 @@ import os
 
 # ref: https://www.kaggle.com/yamashin/estimation-of-infection-with-seir/output
 class EstimationInfectedPeople():
-    def __init__(self, name, population, timestamp, confirmed, deaths, recovered, latent_period=5.1, optim_days=None, optim_weight_en=1):
+    def __init__(self, name, population, pd_covid_19, latent_period=5.5, ratio_population=0.01, optim_days=None, optim_weight_en=1):
         # latent_period=5.1 ref: https://www.ncbi.nlm.nih.gov/pubmed/32150748
         #  The median incubation period was estimated to be 5.1 days (95% CI, 4.5 to 5.8 days)
         self.name = name.strip('*')
         self.population = population
 
-        self.timestamp = []
-        self.infected = []
-        self.deaths = []
-        self.recovered = []
-        self.confirmed = []
-        # self.deaths_confirmed = []
-        # self.recovered_confirmed = []
-        # self.delta_deaths = []
-        # self.delta_recovered = []
-
-        self.delta_deaths_divided_by_infected = []
-        self.delta_recovered_divided_by_infected = []
-
-        '''
-        pre_deaths = 0
-        pre_recovered = 0
-        pre_infected = 0
-        for date, values in data.items():
-            # print(date)
-            self.timestamp.append(dt.strptime(date, '%m/%d/%Y'))
-            confirmed = int(values[0])
-            deaths = int(values[1])
-            recovered = int(values[2])
-            infected = confirmed - deaths - recovered
-
-            self.confirmed.append(confirmed)
-            self.infected.append(infected)
-            self.deaths.append(deaths)
-            self.recovered.append(recovered)
-
-            # self.deaths_confirmed.append(deaths/confirmed)
-            # self.recovered_confirmed.append(recovered/confirmed)
-
-            # self.delta_deaths.append(deaths - pre_deaths)
-            # self.delta_recovered.append(recovered - pre_recovered)
-
-            if pre_infected != 0:
-                self.delta_deaths_divided_by_infected.append((deaths - pre_deaths) / pre_infected)
-                self.delta_recovered_divided_by_infected.append((recovered - pre_recovered) / pre_infected)
-            else:
-                self.delta_deaths_divided_by_infected.append(0)
-                self.delta_recovered_divided_by_infected.append(0)
-
-            pre_deaths = deaths
-            pre_recovered = recovered
-            pre_infected = infected
-        '''
-
-        # clearn data (modify by andrew)
-        self.timestamp = []
-        for i_timestamp in timestamp:
-            self.timestamp.append(dt.strptime(i_timestamp, '%m/%d/%y'))
-
-        self.deaths = deaths
-        self.recovered = recovered
-        self.confirmed = confirmed
-        # '''  # Andrew add
+        self.pd_covid_19 = pd_covid_19
+        self.timestamp = pd_covid_19.index
+        self.deaths = pd_covid_19.deaths
+        self.recovered = pd_covid_19.recovered
+        self.confirmed = pd_covid_19.confirmed
 
         if(np.isnan(self.confirmed[-1])):
             self.timestamp =  self.timestamp[:-1]
@@ -88,15 +37,15 @@ class EstimationInfectedPeople():
         self.deaths = self.complement_value(self.deaths)
         self.recovered = self.complement_value(self.recovered)
         self.confirmed = self.complement_value(self.confirmed)
-        #if(self.recovered[-1]==0):
-        #    self.recovered[-1] = 1
-        # ''' # end of Andrew add
         self.infected  = self.confirmed - self.deaths - self.recovered
+        self.infected[self.infected<0] = 0
 
+        self.estimation_confirmed = []
+        self.delta_deaths_divided_by_infected = []
+        self.delta_recovered_divided_by_infected = []
 
         #-----------------------------
         #
-        #'''  # Andrew add
         idx_confirmed_start = 0
         for idx, i_confirmed in enumerate(self.confirmed):
             if(i_confirmed>=1):
@@ -108,7 +57,6 @@ class EstimationInfectedPeople():
         self.deaths = self.deaths[idx_confirmed_start:]
         self.recovered = self.recovered[idx_confirmed_start:]
         self.confirmed = self.confirmed[idx_confirmed_start:]
-        #'''
 
         pre_deaths = 0
         pre_recovered = 0
@@ -130,6 +78,7 @@ class EstimationInfectedPeople():
         self.dt = 1 #0.01
         self.time = np.arange(0, self.max, self.dt)
         self.latent_period = latent_period
+        self.ratio_population = ratio_population
         self.optim_days = optim_days
         self.optim_weight_en = optim_weight_en
 
@@ -239,7 +188,7 @@ class EstimationInfectedPeople():
         step = int(self.confirmed[len(self.confirmed) - 1] / 10)
         #step = 100
         self.bestEstimatedParams = None  # Andrew add
-        for susceptible in range(int(self.confirmed[len(self.confirmed) - 1]), int(self.population*0.5), step):  # support max N self.population*0.5)
+        for susceptible in range(int(self.confirmed[len(self.confirmed) - 1]), int(self.population*self.ratio_population), step):  # support max N self.population*0.5)
             self.initParams = [susceptible, 0, np.min(self.confirmed), 0, 0]
             estimatedParams = minimize(self.func, initParams, method="L-BFGS-B", bounds=bounds)
             if estimatedParams.success == True:
@@ -326,11 +275,15 @@ class EstimationInfectedPeople():
         ax.plot(day_list, estimated_value_list, color='black', label="Estimation deaths", linewidth=3.0)
         estimation_deaths = estimated_value_list
 
-        estimation_confirmed = (np.asarray(estimation_infection) + np.asarray(estimation_recovered) + np.asarray(estimation_deaths)).tolist()
-        max_estimation_confirmed = int(np.max(np.asarray(estimation_confirmed)))
+        self.estimation_confirmed = (np.asarray(estimation_infection) + np.asarray(estimation_recovered) + np.asarray(estimation_deaths)).tolist()
+        estimation_confirmed_series = pd.Series(self.estimation_confirmed, index =day_list, name='estimation_confirmed')
+        self.pd_covid_19 = pd.concat([self.pd_covid_19, estimation_confirmed_series], axis=1)
+
+
+        max_estimation_confirmed = int(np.max(np.asarray(self.estimation_confirmed)))
         xy_show_max_estimation_confirmed = (day_list[ int(len(day_list)/2) ], max_estimation_confirmed)
         ax.annotate('max: ' + str(max_estimation_confirmed), xy=xy_show_max_estimation_confirmed, size=20, color="black")
-        ax.plot(day_list, estimation_confirmed, color='green', label="Estimation confirmed", linewidth=3.0)
+        ax.plot(day_list, self.estimation_confirmed, color='green', label="Estimation confirmed", linewidth=3.0)
 
         ax.set_ylim(0, )
 
@@ -338,6 +291,8 @@ class EstimationInfectedPeople():
         ax.legend(handler[0:7], label[0:7], loc="upper right", borderaxespad=0., fontsize=20)
 
         return
+
+
 
     def print_estimation(self, estimatedParams):
         Beta = estimatedParams.x[0]     # ->E
@@ -354,9 +309,15 @@ class EstimationInfectedPeople():
         print('R0:', Decimal(R0).quantize(Decimal('.000000'), rounding=ROUND_HALF_UP))
 
 
+    def plot_(self):
+        new_case = self.confire.diff
+        self.estimation_confirmed = []
+
+
     def save_plot(self, title='', result_path=None):
         output = self.name  + '_' + title + '.png'
         if result_path is None:
             plt.savefig(output)
         else:
             plt.savefig(os.path.join(result_path, output))
+

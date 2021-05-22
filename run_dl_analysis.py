@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+#import seaborn as sns
+import datetime
 import requests
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator)
@@ -11,13 +13,16 @@ from EstimationInfectedPeople import EstimationInfectedPeople
 
 http_link = r'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/'
 # ref: https://github.com/CSSEGISandData/COVID-19
+#
 filename_confirmed = 'time_series_covid19_confirmed_global.csv'
 filename_deaths = 'time_series_covid19_deaths_global.csv'
 filename_recovered = 'time_series_covid19_recovered_global.csv'
-optim_days = 45   # None, 60, 30,
+optim_days = 40   # None, 60, 30,
 optim_weight_en = 0
 SEIR_en = 1
-show_day = 14
+show_day = 20
+latent_period = 5.5
+ratio_population = 0.0003  #0.001~0.0001  # for adjust contact population
 
 # population:
 # https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)
@@ -27,9 +32,11 @@ show_day = 14
 #check_Province = [None ,     None ,       None ,          'Hong Kong', 'Hubei', None,    None, 'Washington', 'New York', 'California', 'Massachusetts',  None ,    None ,     None ,]
 
 #'''
-check_Country    = ['Taiwan*', 'Korea, South', 'Singapore', 'China',    'Italy',   'US',     'Japan',    'Malaysia']
-check_Province   = [None ,     None ,          None,        'Hong Kong', None,     None,      None,      None, ]
-check_population = [23600903,  52000000,       5757499,     7479971,     60627291, 329064917, 126860301, 32365999,]
+check_Country    = ['Taiwan*', ]
+check_Province   = [None ,     ]
+check_population = [23600903,  ]
+check_day_start   = ['2021-05-05']
+
 #'''
 '''
 check_Country =  ['US',]
@@ -90,7 +97,7 @@ def main():
     pd_recovered = pd.read_csv(os.path.join(data_path, filename_recovered))
 
     # step3: plot
-    for i_check_Country, i_check_Province, i_population in zip(check_Country, check_Province, check_population):
+    for i_check_Country, i_check_Province, i_population, i_last_day in zip(check_Country, check_Province, check_population, check_day_start):
         if(i_check_Province is None):
             title = i_check_Country
         else:
@@ -99,16 +106,14 @@ def main():
         print('------------------------------------')
         print(title)
 
-        daily_timestamp_confirmed, daily_value_confirmed = get_pd2list(pd_confirmed, i_check_Country, i_check_Province)
-        daily_timestamp_deaths, daily_value_deaths = get_pd2list(pd_deaths, i_check_Country, i_check_Province)
-        daily_timestamp_recovered, daily_value_recovered = get_pd2list(pd_recovered, i_check_Country, i_check_Province)
+        pd_covid_19 = data_preprocessing(pd_confirmed, pd_deaths, pd_recovered, i_check_Country, i_check_Province, i_last_day)
+
 
         #-----------------------------------
         # SEIR
         if(SEIR_en==1):
-            SEIR = EstimationInfectedPeople(title, i_population,
-                                            daily_timestamp_confirmed, daily_value_confirmed, daily_value_deaths, daily_value_recovered,
-                                            optim_days = optim_days, optim_weight_en = optim_weight_en )
+            SEIR = EstimationInfectedPeople(title, i_population, pd_covid_19,
+                                            latent_period=latent_period, ratio_population=ratio_population, optim_days = optim_days, optim_weight_en = optim_weight_en )
             estParams = SEIR.getEstimatedParams()
             print(estParams)
             SEIR.print_estimation(estParams)
@@ -118,6 +123,7 @@ def main():
             fig.suptitle('Infections of a new coronavirus in ' + title.strip('*'), fontsize=30)
             SEIR.plot_bar(ax)
             SEIR.save_plot('observed', result_path)
+            ax.clear()
 
             SEIR.plot(ax, estParams)
             SEIR.save_plot('estimation', result_path)
@@ -125,26 +131,67 @@ def main():
 
         # ------------------------------
         # plot and save
-        daily_value_confirmed_diff = np.append([0], np.diff(daily_value_confirmed))
-        fig, axes1 = plt.subplots()
+        SEIR.pd_covid_19['new confirmed case'] = SEIR.pd_covid_19['confirmed'].diff()
+        if (SEIR_en == 1):
+            SEIR.pd_covid_19['estimation_confirmed']
+            SEIR.pd_covid_19['new confirmed case (estimated)'] = SEIR.pd_covid_19['estimation_confirmed'].diff()
 
-        axes1.bar(daily_timestamp_confirmed, daily_value_confirmed_diff, color='b', label='increased confirmed')
-        axes1.set_ylabel('increased confirmed cases')
+
+        fig, axes1 = plt.subplots()
+        axes1.bar(SEIR.pd_covid_19.index, SEIR.pd_covid_19['new confirmed case'],
+                  color='b', label='new confirmed case ')
+
+        if (SEIR_en == 1):
+            axes1.plot(SEIR.pd_covid_19.index, SEIR.pd_covid_19['new confirmed case (estimated)'],
+                          color='r', label='new confirmed case (estimation)')
+
+        '''
+        axes1.set_ylabel('new confirmed case')
 
         axes2 = plt.twinx()
-        axes2.plot(daily_timestamp_confirmed, daily_value_confirmed, color='r', label='confirmed')
+        axes2.plot(SEIR.pd_covid_19.index, SEIR.pd_covid_19['confirmed'], color='r', label='confirmed')
         axes2.set_ylabel('confirmed cases')
+        '''
 
-        axes2.xaxis.set_major_locator(MultipleLocator(show_day))
-        axes2.xaxis.set_minor_locator(MultipleLocator(1))
+        axes1.xaxis.set_major_locator(MultipleLocator(show_day))
+        axes1.xaxis.set_minor_locator(MultipleLocator(1))
+
 
         plt.title(title)
         #plt.show()
+        plt.legend(loc="upper right", )
         plt.savefig(os.path.join(result_path, title.strip('*') + ".png"))
 
+        idx_max = SEIR.pd_covid_19['new confirmed case (estimated)'].argmax()
+        max_date = SEIR.pd_covid_19['new confirmed case (estimated)'].index[idx_max]
+        max_new_case = SEIR.pd_covid_19['new confirmed case (estimated)'][max_date]
+        print(f'Max estimated new case: {int(max_new_case)} at {max_date}')
 
 
-def get_pd2list(pd_data, check_Country, check_Province):
+def data_preprocessing(pd_confirmed, pd_deaths, pd_recovered, check_Country, check_Province, check_day_start):
+    pd_confirmed_sel = get_pd_sel_country(pd_confirmed, check_Country, check_Province, 'confirmed')
+    pd_deaths_sel = get_pd_sel_country(pd_deaths, check_Country, check_Province, 'deaths')
+    pd_recovered_sel = get_pd_sel_country(pd_recovered, check_Country, check_Province, 'recovered')
+
+    pd_covid_19 = pd.concat([pd_confirmed_sel, pd_deaths_sel, pd_recovered_sel], axis = 1)
+    pd_covid_19.index = pd.to_datetime(pd_covid_19.index)
+
+
+    if check_day_start is not None:
+        check_day_start = datetime.datetime.strptime(check_day_start, "%Y-%m-%d")
+        pd_covid_19 = pd_covid_19[pd_covid_19.index>=check_day_start]
+        pd_covid_19 = pd_covid_19 - pd_covid_19.iloc[0]
+
+    return pd_covid_19
+
+
+
+def get_pd_sel_country(pd_data, check_Country, check_Province, name):
+    if (check_Province is None):
+        data_sel = (pd_data['Country/Region'] == check_Country)
+    else:
+        data_sel = (pd_data['Country/Region'] == check_Country) & (pd_data['Province/State'] == check_Province)
+
     if (check_Province is None):
         pd_sel = pd_data[(pd_data['Country/Region'] == check_Country)]
     else:
@@ -156,13 +203,17 @@ def get_pd2list(pd_data, check_Country, check_Province):
     pd_sel = pd_sel.drop('Country/Region', axis=1)
     pd_sel = pd_sel.drop('Lat', axis=1)
     pd_sel = pd_sel.drop('Long', axis=1)
-    daily_timestamp = pd_sel.columns.tolist()
-    if (pd_sel.values.shape[0] == 1):
-        daily_value = pd_sel.values[0]
-    else:
-        daily_value = np.sum(pd_sel.values, axis=0)
 
-    return daily_timestamp, daily_value
+
+    if (pd_sel.values.shape[0] > 1):
+        pd_sel = pd_sel.sum()
+
+    pd_sel_series = pd_sel.iloc[0]
+    pd_sel_series.name = name
+
+    return pd_sel_series
+
+
 
 def donwload_csv(donwload_url, save_filename):
     r=requests.get(donwload_url)
