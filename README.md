@@ -5,8 +5,9 @@
 
 
 ## 資料
-確診人數資料來源: https://github.com/CSSEGISandData/COVID-19 ，人數比記者會公布的資料落後約1天。  
-
+確診人數資料來源: https://github.com/CSSEGISandData/COVID-19 ，更新時間為台灣時間中午12:50，因此人數比台灣每天下午兩點記者會公布的資料落後近1天。  
+  
+  
 ## 程式與概念 
 1. 安裝相關套件直接執行run_dl_analysis.py 即可。  
 2. SEIR模型主要是擬合已公布的感染人數 (=確診人數-死亡人數-恢復人數)。   
@@ -22,6 +23,8 @@ ratio_population = 0.0003 # 受影響的全人口比例
 1. 2020年初此模型是大幅高估，預測結果僅供參考，疫情數據以台灣CDC公告為主，疫情控制需要全體國民共同努力。   
 2. 目前只有測試台灣的可以跑，其他國家或地區已經沒有維護了。 
  
+ 
+  
 
 <範例結果>    
 ![image](https://github.com/andrewwang7/seir_model_for_covid-19/blob/master/~result/Taiwan.png)
