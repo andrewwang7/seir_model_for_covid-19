@@ -17,13 +17,13 @@ http_link = r'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/c
 filename_confirmed = 'time_series_covid19_confirmed_global.csv'
 filename_deaths = 'time_series_covid19_deaths_global.csv'
 filename_recovered = 'time_series_covid19_recovered_global.csv'
-optim_days = 40   # None, 60, 30,
+optim_days = 7*2   # None, 60, 30,
 optim_weight_en = 0
 SEIR_en = 1
-show_day = 20
+show_day = 30
 latent_period = 5.5
-ratio_population = 0.0003  #0.001~0.0001  # for adjust contact population
-
+#ratio_population = 0.0005  #0.001~0.0001  # for adjust contact population
+ratio_population_list = list(np.array(range(1, 10, 1))*0.0001)   #[0.0003, 0.0004, 0.0005, 0.0006]
 # population:
 # https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)
 # https://simple.wikipedia.org/wiki/List_of_U.S._states_by_population
@@ -113,7 +113,7 @@ def main():
         # SEIR
         if(SEIR_en==1):
             SEIR = EstimationInfectedPeople(title, i_population, pd_covid_19,
-                                            latent_period=latent_period, ratio_population=ratio_population, optim_days = optim_days, optim_weight_en = optim_weight_en )
+                                            latent_period=latent_period, ratio_population_list=ratio_population_list, optim_days = optim_days, optim_weight_en = optim_weight_en )
             estParams = SEIR.getEstimatedParams()
             print(estParams)
             SEIR.print_estimation(estParams)
@@ -135,7 +135,7 @@ def main():
         if (SEIR_en == 1):
             SEIR.pd_covid_19['estimation_confirmed']
             SEIR.pd_covid_19['new confirmed case (estimated)'] = SEIR.pd_covid_19['estimation_confirmed'].diff()
-
+            SEIR.pd_covid_19['new deaths case (estimated)'] = SEIR.pd_covid_19['estimation_deaths'].diff()
 
         fig, axes1 = plt.subplots()
         axes1.bar(SEIR.pd_covid_19.index, SEIR.pd_covid_19['new confirmed case'],
@@ -167,6 +167,13 @@ def main():
         max_new_case = SEIR.pd_covid_19['new confirmed case (estimated)'][max_date]
         print(f'Max estimated new case: {int(max_new_case)} at {max_date}')
 
+        idx_max = SEIR.pd_covid_19['new deaths case (estimated)'].argmax()
+        max_date = SEIR.pd_covid_19['new deaths case (estimated)'].index[idx_max]
+        max_deaths = SEIR.pd_covid_19['new deaths case (estimated)'][max_date]
+        print(f'Max estimated new death case: {int(max_deaths)} at {max_date}')
+
+        total_deathcase = int(SEIR.pd_covid_19['estimation_deaths'][-1])
+        print(f'Total death case: {total_deathcase} ')
 
 def data_preprocessing(pd_confirmed, pd_deaths, pd_recovered, check_Country, check_Province, check_day_start):
     pd_confirmed_sel = get_pd_sel_country(pd_confirmed, check_Country, check_Province, 'confirmed')

@@ -16,7 +16,7 @@ import os
 
 # ref: https://www.kaggle.com/yamashin/estimation-of-infection-with-seir/output
 class EstimationInfectedPeople():
-    def __init__(self, name, population, pd_covid_19, latent_period=5.5, ratio_population=0.01, optim_days=None, optim_weight_en=1):
+    def __init__(self, name, population, pd_covid_19, latent_period=5.5, ratio_population_list=[0.01], optim_days=None, optim_weight_en=1):
         # latent_period=5.1 ref: https://www.ncbi.nlm.nih.gov/pubmed/32150748
         #  The median incubation period was estimated to be 5.1 days (95% CI, 4.5 to 5.8 days)
         self.name = name.strip('*')
@@ -78,7 +78,7 @@ class EstimationInfectedPeople():
         self.dt = 1 #0.01
         self.time = np.arange(0, self.max, self.dt)
         self.latent_period = latent_period
-        self.ratio_population = ratio_population
+        self.ratio_population_list = ratio_population_list
         self.optim_days = optim_days
         self.optim_weight_en = optim_weight_en
 
@@ -188,21 +188,23 @@ class EstimationInfectedPeople():
         step = int(self.confirmed[len(self.confirmed) - 1] / 10)
         #step = 100
         self.bestEstimatedParams = None  # Andrew add
-        for susceptible in range(int(self.confirmed[len(self.confirmed) - 1]), int(self.population*self.ratio_population), step):  # support max N self.population*0.5)
-            self.initParams = [susceptible, 0, np.min(self.confirmed), 0, 0]
-            estimatedParams = minimize(self.func, initParams, method="L-BFGS-B", bounds=bounds)
-            if estimatedParams.success == True:
-                if max_fun < -estimatedParams.fun:
-                    no_new_record_cnt = 0
-                    max_fun = -estimatedParams.fun
-                    #best_population = population
-                    self.bestEstimatedParams = estimatedParams
-                    self.bestInitParams = self.initParams
-                else:
-                    no_new_record_cnt += 1
-                    if no_new_record_cnt > 250:  #250#
-                        print('Susceptible:', susceptible, ' Score:', max_fun)
-                        break
+        for ratio_population in self.ratio_population_list:
+            print(f'ratio_population: {ratio_population}')
+            for susceptible in range(int(self.confirmed[len(self.confirmed) - 1]), int(self.population*ratio_population), step):  # support max N self.population*0.5)
+                self.initParams = [susceptible, 0, np.min(self.confirmed), 0, 0]
+                estimatedParams = minimize(self.func, initParams, method="L-BFGS-B", bounds=bounds)
+                if estimatedParams.success == True:
+                    if max_fun < -estimatedParams.fun:
+                        no_new_record_cnt = 0
+                        max_fun = -estimatedParams.fun
+                        #best_population = population
+                        self.bestEstimatedParams = estimatedParams
+                        self.bestInitParams = self.initParams
+                    else:
+                        no_new_record_cnt += 1
+                        if no_new_record_cnt > 250:  #250#
+                            print('Susceptible:', susceptible, ' Score:', max_fun)
+                            break
 
         return self.bestEstimatedParams
 
@@ -233,6 +235,8 @@ class EstimationInfectedPeople():
         return
 
     def plot_estimation(self, ax, estimatedParams):
+        ##--------------------------------
+        # estimation_infection
         day = self.timestamp[0]
         day_list = []
         max = float("-inf")
@@ -251,6 +255,8 @@ class EstimationInfectedPeople():
         ax.plot(day_list, estimated_value_list, color='red', label="Estimation infection", linewidth=3.0)
         estimation_infection = estimated_value_list
 
+        # --------------------------------
+        # estimation_recovered
         day = self.timestamp[0]
         day_list = []
         estimated_value_list = []
@@ -263,6 +269,8 @@ class EstimationInfectedPeople():
         ax.plot(day_list, estimated_value_list, color='blue', label="Estimation recovered", linewidth=3.0)
         estimation_recovered = estimated_value_list
 
+        # --------------------------------
+        # estimation_deaths
         day = self.timestamp[0]
         day_list = []
         estimated_value_list = []
@@ -273,11 +281,14 @@ class EstimationInfectedPeople():
             if estimated_value < 0:
                 break
         ax.plot(day_list, estimated_value_list, color='black', label="Estimation deaths", linewidth=3.0)
-        estimation_deaths = estimated_value_list
+        self.estimation_deaths = np.asarray(estimated_value_list)
 
-        self.estimation_confirmed = (np.asarray(estimation_infection) + np.asarray(estimation_recovered) + np.asarray(estimation_deaths)).tolist()
+        #--------------------------------
+        self.estimation_confirmed = (np.asarray(estimation_infection) + np.asarray(estimation_recovered) + np.asarray(self.estimation_deaths)).tolist()
+
+        estimation_deaths_series = pd.Series(self.estimation_deaths, index=day_list, name='estimation_deaths')
         estimation_confirmed_series = pd.Series(self.estimation_confirmed, index =day_list, name='estimation_confirmed')
-        self.pd_covid_19 = pd.concat([self.pd_covid_19, estimation_confirmed_series], axis=1)
+        self.pd_covid_19 = pd.concat([self.pd_covid_19, estimation_confirmed_series, estimation_deaths_series], axis=1)
 
 
         max_estimation_confirmed = int(np.max(np.asarray(self.estimation_confirmed)))
