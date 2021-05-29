@@ -27,10 +27,10 @@ latent_period = 5.5   # 潛伏期
  
   
 
-<範例結果> 
-感染人數預估
+<範例結果>   
+感染人數預估  
 ![image](https://github.com/andrewwang7/seir_model_for_covid-19/blob/master/~result/Taiwan_estimation.png)
 
-新增病例   
+新增病例     
 ![image](https://github.com/andrewwang7/seir_model_for_covid-19/blob/master/~result/Taiwan.png)
 
