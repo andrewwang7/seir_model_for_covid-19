@@ -17,7 +17,7 @@
 4. 潛伏期設定為5.5，參照照台灣CDC的Q&A中的5~6天 (https://www.cdc.gov.tw/Category/QAPage/B5ttQxRgFUZlRFPS1dRliw)。   
 
 因此程式中主要影響的參數包括  
-optim_days = 40   # 擬合感染人數的天數  
+optim_days = 14   # 擬合感染人數的天數  
 latent_period = 5.5   # 潛伏期  
 
 註解:  
@@ -27,5 +27,10 @@ latent_period = 5.5   # 潛伏期
  
   
 
-<範例結果>    
+<範例結果> 
+感染人數預估
+![image](https://github.com/andrewwang7/seir_model_for_covid-19/blob/master/~result/Taiwan_estimation.png)
+
+新增病例   
 ![image](https://github.com/andrewwang7/seir_model_for_covid-19/blob/master/~result/Taiwan.png)
+
