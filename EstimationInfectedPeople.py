@@ -161,16 +161,16 @@ class EstimationInfectedPeople():
 
         if(self.optim_weight_en==1):
             weights = 1 / np.arange(1, optim_days + 1)[::-1]  # Recent data is more heavily weighted
-            msle_infected = mean_squared_log_error(self.infected[-optim_days:,], est_i[-optim_days:, 2], weights)
-            #msle_recovered = mean_squared_log_error(self.recovered[-optim_days:, ], est_i[-optim_days:, 3], weights)
-            #msle_deaths = mean_squared_log_error(self.deaths[-optim_days:, ], est_i[-optim_days:, 4], weights)
+            msle_infected = mean_squared_error(self.infected[-optim_days:,], est_i[-optim_days:, 2], weights)
+            msle_recovered = mean_squared_error(self.recovered[-optim_days:, ], est_i[-optim_days:, 3], weights)
+            msle_deaths = mean_squared_error(self.deaths[-optim_days:, ], est_i[-optim_days:, 4], weights)
         else:
-            msle_infected = mean_squared_log_error(self.infected[-optim_days:,], est_i[-optim_days:, 2], )
-            #msle_recovered = mean_squared_log_error(self.recovered, est_i[:, 3], )
-            #msle_deaths = mean_squared_log_error(self.deaths, est_i[:, 4], )
+            msle_infected = mean_squared_error(self.infected[-optim_days:,], est_i[-optim_days:, 2], )
+            msle_recovered = mean_squared_error(self.recovered[-optim_days:,], est_i[-optim_days:, 3], )
+            msle_deaths = mean_squared_error(self.deaths[-optim_days:,], est_i[-optim_days:, 4], )
 
-        #return msle_infected + msle_recovered + msle_deaths
-        return msle_infected
+        return msle_infected + msle_recovered * 0.5 + msle_deaths
+        #return msle_infected
 
 
 

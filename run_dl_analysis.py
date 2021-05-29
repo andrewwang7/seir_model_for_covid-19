@@ -96,6 +96,11 @@ def main():
     pd_deaths = pd.read_csv(os.path.join(data_path, filename_deaths))
     pd_recovered = pd.read_csv(os.path.join(data_path, filename_recovered))
 
+    #
+
+
+
+
     # step3: plot
     for i_check_Country, i_check_Province, i_population, i_last_day in zip(check_Country, check_Province, check_population, check_day_start):
         if(i_check_Province is None):
@@ -183,6 +188,24 @@ def data_preprocessing(pd_confirmed, pd_deaths, pd_recovered, check_Country, che
     pd_covid_19 = pd.concat([pd_confirmed_sel, pd_deaths_sel, pd_recovered_sel], axis = 1)
     pd_covid_19.index = pd.to_datetime(pd_covid_19.index)
 
+    #-------------------------------------------
+    # add Taiwan newest data
+    if check_Country == 'Taiwan*':
+        covid19_tw_stats_df = pd.read_csv('https://od.cdc.gov.tw/eic/covid19/covid19_tw_stats.csv')
+        covid19_tw_stats_df.apply(lambda s: s.astype(str).str.replace(',', '').astype(float))
+        confirmed_newest = covid19_tw_stats_df["確診"][0]
+        deaths_newest = covid19_tw_stats_df["死亡"][0]
+        recovered_newest =  covid19_tw_stats_df["解除隔離"][0]
+
+        if confirmed_newest > pd_covid_19['confirmed'][-1]:
+            pd_covid_19_newest = pd.DataFrame.from_dict({
+                'confirmed': [confirmed_newest],
+                'deaths': [deaths_newest],
+                'recovered': [recovered_newest],
+            })
+            pd_covid_19_newest.index = [pd_covid_19.index[-1] + datetime.timedelta(days=1)]
+            pd_covid_19 = pd_covid_19.append(pd_covid_19_newest, )  # ignore_index
+    #----------------------------------------
 
     if check_day_start is not None:
         check_day_start = datetime.datetime.strptime(check_day_start, "%Y-%m-%d")
