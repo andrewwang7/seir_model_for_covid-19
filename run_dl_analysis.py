@@ -142,7 +142,7 @@ def main():
 
         # ------------------------------
         # plot and save
-        SEIR.pd_covid_19['new confirmed case'] = SEIR.pd_covid_19['confirmed'].diff()
+        #SEIR.pd_covid_19['new confirmed case'] = SEIR.pd_covid_19['confirmed'].diff()
         if (SEIR_en == 1):
             SEIR.pd_covid_19['estimation_confirmed']
             SEIR.pd_covid_19['new confirmed case (estimated)'] = SEIR.pd_covid_19['estimation_confirmed'].diff()
