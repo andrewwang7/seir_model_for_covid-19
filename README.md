@@ -5,17 +5,19 @@
 
 
 ## 資料
-確診人數資料來源: https://github.com/CSSEGISandData/COVID-19 ，更新時間為台灣時間中午12:50，因此人數比台灣每天下午兩點記者會公布的資料落後近1天。  
+確診人數資料來源: 
+1. https://github.com/CSSEGISandData/COVID-19 ，更新時間為台灣時間中午12:50，因此人數比台灣每天下午兩點記者會公布的資料落後近1天。  
+2. COVID-19台灣最新病例、檢驗統計: https://data.cdc.gov.tw/dataset/covid19_tw__stats
   
   
 ## 程式與概念 
 1. 安裝相關套件直接執行run_dl_analysis.py 即可。  
-2. SEIR模型主要是擬合已公布的感染人數(=確診人數-死亡人數-恢復人數)。   
-3. 此模型有一個很大的假設，總體影響人數是固定的 (wiki裡面提到的N)，此數值跟打疫苗、戴口罩、隔離的程度高度相關，目前N值是擬合出來的。   
+2. SEIR模型主要是擬合已公布的死亡人數、恢復人數以及感染人數(=確診人數-死亡人數-恢復人數)。   
+3. 此模型有一個很大的假設，總體影響人數是固定的 (wiki裡面提到的N)，此數值跟打疫苗、戴口罩、隔離的程度高度相關，目前N值修正為擬合。   
 4. 潛伏期設定為5.5，參照照台灣CDC的Q&A中的5~6天 (https://www.cdc.gov.tw/Category/QAPage/B5ttQxRgFUZlRFPS1dRliw)。   
 
 因此程式中主要影響的參數包括  
-optim_days = 40   # 擬合感染人數的天數  
+optim_days = 14   # 擬合感染人數的天數  
 latent_period = 5.5   # 潛伏期  
 
 註解:  
@@ -25,5 +27,10 @@ latent_period = 5.5   # 潛伏期
  
   
 
-<範例結果>    
+<範例結果>   
+感染人數預估  
+![image](https://github.com/andrewwang7/seir_model_for_covid-19/blob/master/~result/Taiwan_estimation.png)
+
+新增病例     
 ![image](https://github.com/andrewwang7/seir_model_for_covid-19/blob/master/~result/Taiwan.png)
+
