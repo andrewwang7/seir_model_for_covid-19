@@ -316,8 +316,8 @@ class EstimationInfectedPeople():
         print('Gamma:', Decimal(Gamma).quantize(Decimal('.000000'), rounding=ROUND_HALF_UP))
         print('Tau:', Decimal(Tau).quantize(Decimal('.000000'), rounding=ROUND_HALF_UP))
 
-        R0 = (Kappa / (Tau + Kappa)) * (Beta / (Tau + Gamma))
-        print('R0:', Decimal(R0).quantize(Decimal('.000000'), rounding=ROUND_HALF_UP))
+        #R0 = (Kappa / (Tau + Kappa)) * (Beta / (Tau + Gamma))
+        #print('R0:', Decimal(R0).quantize(Decimal('.000000'), rounding=ROUND_HALF_UP))
 
 
     def plot_(self):

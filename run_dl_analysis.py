@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 #import seaborn as sns
 import datetime
 import requests
+from statsmodels.tsa.seasonal import seasonal_decompose, STL
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator)
 import os
@@ -96,11 +97,6 @@ def main():
     pd_deaths = pd.read_csv(os.path.join(data_path, filename_deaths))
     pd_recovered = pd.read_csv(os.path.join(data_path, filename_recovered))
 
-    #
-
-
-
-
     # step3: plot
     for i_check_Country, i_check_Province, i_population, i_last_day in zip(check_Country, check_Province, check_population, check_day_start):
         if(i_check_Province is None):
@@ -133,6 +129,16 @@ def main():
             SEIR.plot(ax, estParams)
             SEIR.save_plot('estimation', result_path)
             ax.clear()
+
+        # -----------------------------------
+        # season decompose
+        SEIR.pd_covid_19['new confirmed case'] = SEIR.pd_covid_19['confirmed'].diff()
+        result_seasonal_decompose = seasonal_decompose(SEIR.pd_covid_19['new confirmed case'].dropna(), model='multiplicative', period=7)
+        #result_seasonal_decompose = STL(SEIR.pd_covid_19['new confirmed case'].dropna(), period=7).fit()
+        fig = result_seasonal_decompose.plot()
+        fig.set_size_inches(18.5, 10.5)
+        plt.savefig(os.path.join(result_path, title.strip('*') + "_seasonal_decompose.png"))
+        SEIR.pd_covid_19['new confirmed case (season adjustment'] = result_seasonal_decompose.observed*result_seasonal_decompose.seasonal
 
         # ------------------------------
         # plot and save
@@ -192,7 +198,7 @@ def data_preprocessing(pd_confirmed, pd_deaths, pd_recovered, check_Country, che
     # add Taiwan newest data
     if check_Country == 'Taiwan*':
         covid19_tw_stats_df = pd.read_csv('https://od.cdc.gov.tw/eic/covid19/covid19_tw_stats.csv')
-        covid19_tw_stats_df.apply(lambda s: s.astype(str).str.replace(',', '').astype(float))
+        covid19_tw_stats_df = covid19_tw_stats_df.apply(lambda s: s.astype(str).str.replace(',', '').astype(float))
         confirmed_newest = covid19_tw_stats_df["確診"][0]
         deaths_newest = covid19_tw_stats_df["死亡"][0]
         recovered_newest =  covid19_tw_stats_df["解除隔離"][0]
