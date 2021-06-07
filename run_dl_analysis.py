@@ -136,7 +136,7 @@ def main():
         result_seasonal_decompose = seasonal_decompose(SEIR.pd_covid_19['new confirmed case'].dropna(), model='multiplicative', period=7)
         #result_seasonal_decompose = STL(SEIR.pd_covid_19['new confirmed case'].dropna(), period=7).fit()
         fig = result_seasonal_decompose.plot()
-        fig.set_size_inches(18.5, 10.5)
+        fig.set_size_inches(12, 6)
         plt.savefig(os.path.join(result_path, title.strip('*') + "_seasonal_decompose.png"))
         SEIR.pd_covid_19['new confirmed case (season adjustment'] = result_seasonal_decompose.observed*result_seasonal_decompose.seasonal
 
