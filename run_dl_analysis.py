@@ -19,12 +19,12 @@ filename_confirmed = 'time_series_covid19_confirmed_global.csv'
 filename_deaths = 'time_series_covid19_deaths_global.csv'
 filename_recovered = 'time_series_covid19_recovered_global.csv'
 optim_days = 7*2   # None, 60, 30,
-optim_weight_en = 0
+optim_weight_en = 1
 SEIR_en = 1
 show_day = 30
 latent_period = 5.5
 #ratio_population = 0.0005  #0.001~0.0001  # for adjust contact population
-ratio_population_list = list(np.array(range(1, 10, 1))*0.0001)   #[0.0003, 0.0004, 0.0005, 0.0006]
+ratio_population_list = list(np.array(range(1, 10, 1))*0.1)   #[0.0003, 0.0004, 0.0005, 0.0006]
 # population:
 # https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)
 # https://simple.wikipedia.org/wiki/List_of_U.S._states_by_population
@@ -36,7 +36,7 @@ ratio_population_list = list(np.array(range(1, 10, 1))*0.0001)   #[0.0003, 0.000
 check_Country    = ['Taiwan*', ]
 check_Province   = [None ,     ]
 check_population = [23600903,  ]
-check_day_start   = ['2021-05-05']
+check_day_start   = ['2022-03-15']
 
 #'''
 '''
@@ -137,7 +137,7 @@ def main():
         #result_seasonal_decompose = STL(SEIR.pd_covid_19['new confirmed case'].dropna(), period=7).fit()
         fig = result_seasonal_decompose.plot()
         fig.set_size_inches(12, 6)
-        plt.savefig(os.path.join(result_path, title.strip('*') + "_seasonal_decompose.png"))
+        plt.savefig(os.path.join(result_path, title.strip('*') + "_seasonal_decompose.png"), dpi=282)
         SEIR.pd_covid_19['new confirmed case (season adjustment'] = result_seasonal_decompose.observed*result_seasonal_decompose.seasonal
 
         # ------------------------------
@@ -199,9 +199,10 @@ def data_preprocessing(pd_confirmed, pd_deaths, pd_recovered, check_Country, che
     if check_Country == 'Taiwan*':
         covid19_tw_stats_df = pd.read_csv('https://od.cdc.gov.tw/eic/covid19/covid19_tw_stats.csv')
         covid19_tw_stats_df = covid19_tw_stats_df.apply(lambda s: s.astype(str).str.replace(',', '').astype(float))
-        confirmed_newest = covid19_tw_stats_df["確診"][0]
+        '''
+        confirmed_newest = covid19_tw_stats_df["昨日確診"][0]
         deaths_newest = covid19_tw_stats_df["死亡"][0]
-        recovered_newest =  covid19_tw_stats_df["解除隔離"][0]
+        recovered_newest =  covid19_tw_stats_df["排除"][0]
 
         if confirmed_newest > pd_covid_19['confirmed'][-1]:
             pd_covid_19_newest = pd.DataFrame.from_dict({
@@ -211,6 +212,7 @@ def data_preprocessing(pd_confirmed, pd_deaths, pd_recovered, check_Country, che
             })
             pd_covid_19_newest.index = [pd_covid_19.index[-1] + datetime.timedelta(days=1)]
             pd_covid_19 = pd_covid_19.append(pd_covid_19_newest, )  # ignore_index
+        '''
     #----------------------------------------
 
     if check_day_start is not None:
