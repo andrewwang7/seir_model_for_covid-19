@@ -19,12 +19,14 @@ filename_confirmed = 'time_series_covid19_confirmed_global.csv'
 filename_deaths = 'time_series_covid19_deaths_global.csv'
 filename_recovered = 'time_series_covid19_recovered_global.csv'
 optim_days = 7*2   # None, 60, 30,
-optim_weight_en = 1
+optim_weight_en = 0
 SEIR_en = 1
-show_day = 30
+show_day = 30*2
 latent_period = 5.5
 #ratio_population = 0.0005  #0.001~0.0001  # for adjust contact population
-ratio_population_list = list(np.array(range(1, 10, 1))*0.1)   #[0.0003, 0.0004, 0.0005, 0.0006]
+#ratio_population_list = list(np.array(range(1, 30, 1))*0.01)   #[0.0003, 0.0004, 0.0005, 0.0006]
+ratio_population_list = [0.5, 0.6, 0.7, 0.8]  #list(np.array(range(20, 30, 1))*0.01)   #[0.0003, 0.0004, 0.0005, 0.0006]
+
 # population:
 # https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)
 # https://simple.wikipedia.org/wiki/List_of_U.S._states_by_population
@@ -165,7 +167,7 @@ def main():
         '''
 
         axes1.xaxis.set_major_locator(MultipleLocator(show_day))
-        axes1.xaxis.set_minor_locator(MultipleLocator(1))
+        axes1.xaxis.set_minor_locator(MultipleLocator(10))
 
 
         plt.title(title)

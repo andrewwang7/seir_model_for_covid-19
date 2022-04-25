@@ -169,8 +169,8 @@ class EstimationInfectedPeople():
             msle_recovered = mean_squared_error(self.recovered[-optim_days:,], est_i[-optim_days:, 3], )
             msle_deaths = mean_squared_error(self.deaths[-optim_days:,], est_i[-optim_days:, 4], )
 
-        return msle_infected + msle_recovered * 0.5 + msle_deaths
-        #return msle_infected
+        #return 0.9 * msle_infected  + 0.1 * msle_deaths  + 0 * msle_recovered  # (0: no recovered info)
+        return msle_infected
 
 
 
@@ -184,13 +184,14 @@ class EstimationInfectedPeople():
         no_new_record_cnt = 0
         max_fun = float("-inf")  # Andrew add
         bounds = [(0, None)]
-        initParams = [0.001]
-        step = int(self.confirmed[len(self.confirmed) - 1] / 10)
-        #step = 100
+        initParams = [0.01]
         self.bestEstimatedParams = None  # Andrew add
         for ratio_population in self.ratio_population_list:
             print(f'ratio_population: {ratio_population}')
-            for susceptible in range(int(self.confirmed[len(self.confirmed) - 1]), int(self.population*ratio_population), step):  # support max N self.population*0.5)
+            susceptible_step = int(self.population * ratio_population / 10)  # int(self.confirmed[len(self.confirmed) - 1])
+            susceptible_start  = susceptible_step  # int(self.confirmed[len(self.confirmed) - 1] / 10)
+            susceptible_end = int(self.population * ratio_population)
+            for susceptible in range(susceptible_start, susceptible_end, susceptible_step):
                 self.initParams = [susceptible, 0, np.min(self.confirmed), 0, 0]
                 estimatedParams = minimize(self.func, initParams, method="L-BFGS-B", bounds=bounds)
                 if estimatedParams.success == True:
@@ -202,7 +203,7 @@ class EstimationInfectedPeople():
                         self.bestInitParams = self.initParams
                     else:
                         no_new_record_cnt += 1
-                        if no_new_record_cnt > 250:  #250#
+                        if no_new_record_cnt > 500:  #250#
                             print('Susceptible:', susceptible, ' Score:', max_fun)
                             break
 
@@ -251,7 +252,7 @@ class EstimationInfectedPeople():
             day += datetime.timedelta(days=1)
             if estimated_value < 0:
                 break
-        ax.annotate(peak[0].strftime('%Y/%m/%d') + ' ' + str(int(peak[1])), xy=peak, size=20, color="black")
+        ax.annotate(peak[0].strftime('%Y/%m/%d') + ' ' + str(int(peak[1])), xy=peak, size=10, color="black")
         ax.plot(day_list, estimated_value_list, color='red', label="Estimation infection", linewidth=3.0)
         estimation_infection = estimated_value_list
 
