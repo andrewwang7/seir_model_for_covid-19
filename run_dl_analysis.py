@@ -25,7 +25,7 @@ show_day = 30*2
 latent_period = 5.5
 #ratio_population = 0.0005  #0.001~0.0001  # for adjust contact population
 #ratio_population_list = list(np.array(range(1, 30, 1))*0.01)   #[0.0003, 0.0004, 0.0005, 0.0006]
-ratio_population_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  #list(np.array(range(20, 30, 1))*0.01)   #[0.0003, 0.0004, 0.0005, 0.0006]
+ratio_population_list = [0.1, 0.2, 0.3, 0.4] #[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  #list(np.array(range(20, 30, 1))*0.01)   #[0.0003, 0.0004, 0.0005, 0.0006]
 
 # population:
 # https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)
